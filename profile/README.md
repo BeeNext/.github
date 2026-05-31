@@ -1,84 +1,167 @@
-# BeeNext Project Organization & Architecture
+# BeeNext Project Organization
 
-This document describes the directory structure, file organization, and architectural layout of the BeeNext ecosystem, which consists of a backend server (`BE_BeeNext`) and a cross-platform mobile client (`MOBILE_BeeNext`).
+BeeNext is split into two main applications:
+
+- `BE_BeeNext` - Express + TypeScript backend API
+- `MOBILE_BeeNext` - Flutter mobile client
+
+The project follows a simple feature-first structure. Backend code is grouped by API domain, while mobile code is grouped by application layer and screen feature.
 
 ---
 
-## 📂 Overall Repository Layout
+## Repository Layout
 
-```
+```text
 BeeNext/
-├── BE_BeeNext/         # Express + TypeScript + Prisma Backend
-└── MOBILE_BeeNext/     # Flutter + Dart Mobile App
+|-- BE_BeeNext/          # Backend API
+|-- MOBILE_BeeNext/      # Flutter mobile app
+`-- docs/                # Project documentation
 ```
 
 ---
 
-## 📱 Mobile App Organization (`MOBILE_BeeNext`)
+## Backend Organization
 
-The Flutter application code is grouped inside the `lib/` directory using a simplified, feature-grouped structure.
+The backend is organized around Express route modules. Each module owns its controller, service, repository, and route file when needed.
 
-### `lib/` Structure
-
+```text
+BE_BeeNext/
+|-- prisma/
+|   |-- schema.prisma
+|   |-- seed.ts
+|   `-- migrations/
+|-- src/
+|   |-- config/
+|   |-- middlewares/
+|   |-- modules/
+|   |   |-- assets/
+|   |   |-- auth/
+|   |   |-- categories/
+|   |   |-- notifications/
+|   |   |-- products/
+|   |   `-- regions/
+|   |-- types/
+|   |-- utils/
+|   `-- index.ts
+|-- package.json
+`-- tsconfig.json
 ```
-lib/
-├── bloc/               # State Management (BLoC Pattern)
-│   ├── auth_bloc/
-│   ├── home_feed_bloc/
-│   ├── listing_create_bloc/
-│   ├── my_listings_bloc/
-│   ├── product_detail_bloc/
-│   ├── profile_bloc/
-│   └── search_catalog_bloc/
-│
-├── data/               # Data Layer
-│   ├── models/         # Data Models & Entities (e.g. auth_session.dart)
-│   └── services/       # Network Services & Repository Implementations (e.g. api_client.dart)
-│
-├── helpers/            # Application Shared Helpers & Utils
-│   ├── api_settings/   # API configuration and constant URLs
-│   ├── di/             # Dependency Injection / Bloc Providers
-│   ├── errors/         # Custom exceptions / network error handlers
-│   ├── routes/         # Navigation Route generation maps
-│   ├── theme/          # App look-and-feel theme definitions
-│   └── utils/          # Standalone utilities (e.g. api_image_url.dart)
-│
-├── pages/              # Visual Screens
-│   ├── auth/           # Login, Sign Up, Landing screens
-│   ├── marketplace/    # Feed, Create Listing, Detail, Search pages
-│   └── profile/        # User Profile settings page
-│
-├── widgets/            # Custom reusable widgets
-│   ├── marketplace/    # Marketplace modals / cards
-│   ├── profile/        # Profile modals / sheets
-│   └── shared/         # Universal widgets (e.g. network image view)
-│
-├── app.dart            # Root Material App config
-└── main.dart           # App entry point (initializes .env, shared preferences)
+
+### Backend Layers
+
+| Layer | Purpose |
+| --- | --- |
+| `routes` | Defines Express endpoints and middleware chain |
+| `controller` | Reads request data, validates basic input, returns HTTP responses |
+| `service` | Holds business rules and cross-repository workflow |
+| `repository` | Talks directly to Prisma/database |
+| `types` | Shared TypeScript request, response, product, auth, and notification types |
+| `utils` | Common helpers for responses, storage, parsing, JWT, and passwords |
+
+### Backend Domains
+
+| Module | Responsibility |
+| --- | --- |
+| `assets` | Serve stored image assets |
+| `auth` | Register, login, current user profile, password and phone updates |
+| `categories` | Product category list |
+| `notifications` | User marketplace notification feed |
+| `products` | Product list, detail, create, edit, delete, and owner listings |
+| `regions` | BINUS campus region list |
+
+---
+
+## Mobile Organization
+
+The Flutter app separates state management, data access, helpers, pages, and reusable widgets.
+
+```text
+MOBILE_BeeNext/
+|-- assets/
+|   |-- fonts/
+|   |-- icons/
+|   `-- illustrations/
+|-- lib/
+|   |-- bloc/
+|   |-- data/
+|   |-- helpers/
+|   |-- pages/
+|   |-- widgets/
+|   |-- app.dart
+|   `-- main.dart
+|-- pubspec.yaml
+`-- test/
+```
+
+### Mobile Layers
+
+| Layer | Purpose |
+| --- | --- |
+| `bloc` | UI state and async workflow orchestration |
+| `data/models` | App data models, such as auth session and user |
+| `data/services` | REST API client, remote data sources, repository interfaces, implementations |
+| `helpers/api_settings` | API base URL and endpoint constants |
+| `helpers/di` | Repository and dependency providers |
+| `helpers/errors` | App-level exception types |
+| `helpers/routes` | App route generation |
+| `helpers/theme` | Shared Material theme |
+| `helpers/utils` | Small reusable helpers, such as API image URL resolution |
+| `pages` | Full-screen UI flows |
+| `widgets` | Reusable smaller UI components |
+
+### Mobile Feature Areas
+
+| Area | Files |
+| --- | --- |
+| Auth | `pages/auth`, `bloc/auth_bloc`, auth services |
+| Home Feed | `pages/marketplace/home_page.dart`, `bloc/home_feed_bloc` |
+| Search | `pages/marketplace/search_page.dart`, `bloc/search_catalog_bloc` |
+| Product Detail | `pages/marketplace/detail_page.dart`, `bloc/product_detail_bloc` |
+| Create/Edit Listing | `pages/marketplace/add_page.dart`, `bloc/listing_create_bloc` |
+| My Listings | `pages/marketplace/my_listings_page.dart`, `bloc/my_listings_bloc` |
+| Notifications | `pages/marketplace/notification_page.dart` |
+| Profile | `pages/profile`, `bloc/profile_bloc`, profile widgets |
+
+---
+
+## Request Flow
+
+### Backend Request Flow
+
+```text
+HTTP request
+-> route
+-> middleware
+-> controller
+-> service
+-> repository
+-> Prisma/PostgreSQL
+-> response helper
+-> HTTP response
+```
+
+### Mobile Data Flow
+
+```text
+Page widget
+-> BLoC event
+-> repository
+-> remote data source
+-> ApiClient
+-> backend API
+-> BLoC state
+-> page rebuild
 ```
 
 ---
 
-## 🖥️ Backend Service Organization (`BE_BeeNext`)
+## Documentation Style
 
-The Node.js Express server backend is structured using TypeScript and modular domain packaging.
+The project documentation follows a compact README style:
 
-### `src/` Structure
-
-```
-src/
-├── config/             # Server port and DB connection keys loading
-├── middlewares/        # Express request middle validation (e.g. JWT check)
-├── modules/            # Domain Feature Modules
-│   ├── assets/         # Static uploads and media handlers
-│   ├── auth/           # Login, registration, profile updates (controller, service, repository, routes)
-│   ├── categories/     # Listing categories definitions
-│   ├── notifications/  # Action notifications system
-│   ├── payments/       # Transaction checks
-│   ├── products/       # Core product listing management
-│   └── regions/        # Campus region coordinates and listings
-│
-├── types/              # TS custom type extensions (e.g. custom express request context)
-├── utils/              # Base utility functions
-└── index.ts            # Entrypoint file to bootstrap the Express server
-```
+- Start with what the project does.
+- List the tech stack.
+- Show setup and environment variables.
+- Document useful scripts.
+- Keep endpoint/features tables short and practical.
+- Use ASCII tree diagrams to avoid encoding issues across editors.
