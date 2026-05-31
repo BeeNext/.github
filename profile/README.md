@@ -9,17 +9,6 @@ The project follows a simple feature-first structure. Backend code is grouped by
 
 ---
 
-## Repository Layout
-
-```text
-BeeNext/
-|-- BE_BeeNext/          # Backend API
-|-- MOBILE_BeeNext/      # Flutter mobile app
-`-- docs/                # Project documentation
-```
-
----
-
 ## Backend Organization
 
 The backend is organized around Express route modules. Each module owns its controller, service, repository, and route file when needed.
